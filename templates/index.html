@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ clinica.nome }} — Painel de Atendimento</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--green:#25D366;--dark-green:#128C7E;--bg:#f0f2f5;--white:#fff;--gray:#667781;--light:#e9edef}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:#111}
+
+/* ── LAYOUT ── */
+.container{display:grid;grid-template-columns:320px 1fr 320px;height:100vh;gap:0}
+
+/* ── SIDEBAR ESQUERDA — PAINEL ADMIN ── */
+.sidebar{background:#1a1a2e;color:#fff;display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:20px;background:#16213e;border-bottom:1px solid rgba(255,255,255,0.08)}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.logo-icon{width:36px;height:36px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-text{font-size:14px;font-weight:700;color:#fff}
+.logo-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px}
+.stat-card{background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.08)}
+.stat-value{font-size:22px;font-weight:700;color:var(--green)}
+.stat-label{font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px}
+
+.section-title{padding:12px 16px 6px;font-size:10px;font-weight:600;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px}
+
+.agenda-list{flex:1;overflow-y:auto;padding:0 10px 10px}
+.agenda-item{background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px;margin-bottom:6px;border-left:3px solid var(--green);cursor:pointer;transition:background .2s}
+.agenda-item:hover{background:rgba(255,255,255,0.08)}
+.agenda-item.pendente{border-color:#f59e0b}
+.agenda-nome{font-size:13px;font-weight:600;color:#fff}
+.agenda-info{font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px}
+.agenda-badge{display:inline-block;font-size:9px;padding:2px 7px;border-radius:20px;margin-top:4px;font-weight:600;text-transform:uppercase}
+.badge-confirmado{background:rgba(37,211,102,0.15);color:#25D366}
+.badge-pendente{background:rgba(245,158,11,0.15);color:#f59e0b}
+
+/* ── CENTRO — WHATSAPP CHAT ── */
+.chat-container{display:flex;flex-direction:column;background:#efeae2;position:relative}
+.chat-header{background:#128C7E;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.header-info h3{color:#fff;font-size:15px;font-weight:600}
+.header-info p{color:rgba(255,255,255,0.7);font-size:12px}
+.header-status{display:flex;align-items:center;gap:5px}
+.online-dot{width:8px;height:8px;background:#a3e4b7;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Fundo WhatsApp */
+.chat-bg{
+  flex:1;overflow-y:auto;padding:16px;
+  background-color:#efeae2;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M30 0C13.4 0 0 13.4 0 30s13.4 30 30 30 30-13.4 30-30S46.6 0 30 0zm0 54C16.7 54 6 43.3 6 30S16.7 6 30 6s24 10.7 24 24-10.7 24-24 24z' fill='%23d4cdc7' fill-opacity='0.15'/%3E%3C/svg%3E");
+}
+.date-divider{text-align:center;margin:12px 0}
+.date-divider span{background:rgba(225,221,216,0.95);padding:5px 14px;border-radius:8px;font-size:11px;color:#667781;font-weight:500}
+
+.message{max-width:72%;margin-bottom:6px;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.message.received{align-self:flex-start}
+.message.sent{align-self:flex-end;margin-left:auto}
+.bubble{padding:8px 12px 6px;border-radius:7.5px;font-size:14px;line-height:1.5;position:relative;word-wrap:break-word}
+.message.received .bubble{background:#fff;border-top-left-radius:0;box-shadow:0 1px 0.5px rgba(0,0,0,.13)}
+.message.sent .bubble{background:#d9fdd3;border-top-right-radius:0;box-shadow:0 1px 0.5px rgba(0,0,0,.13)}
+.message-time{font-size:11px;color:#667781;float:right;margin-left:8px;margin-top:2px}
+.message-name{font-size:12px;font-weight:600;color:#128C7E;margin-bottom:2px}
+.typing{display:flex;align-items:center;gap:4px;padding:10px 14px;background:#fff;border-radius:7.5px;max-width:80px;box-shadow:0 1px 0.5px rgba(0,0,0,.13)}
+.typing-dot{width:8px;height:8px;background:#999;border-radius:50%;animation:typing 1.2s infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+.chat-input-area{background:#f0f2f5;padding:10px 16px;display:flex;align-items:center;gap:10px;border-top:1px solid #e9edef}
+.input-wrapper{flex:1;background:#fff;border-radius:24px;display:flex;align-items:center;padding:8px 16px;gap:8px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.input-wrapper input{flex:1;border:none;outline:none;font-size:15px;font-family:'Inter',sans-serif;color:#111}
+.input-wrapper input::placeholder{color:#8696a0}
+.emoji-btn{font-size:22px;cursor:pointer;color:#8696a0}
+.send-btn{width:48px;height:48px;background:#128C7E;border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;flex-shrink:0}
+.send-btn:hover{background:#0e7168}
+.send-btn svg{fill:#fff;width:20px;height:20px}
+
+/* ── SIDEBAR DIREITA — CLIENTES ── */
+.right-panel{background:#fff;border-left:1px solid #e9edef;display:flex;flex-direction:column;overflow:hidden}
+.right-header{padding:18px 16px;border-bottom:1px solid #e9edef}
+.right-header h3{font-size:15px;font-weight:700;color:#111}
+.right-header p{font-size:12px;color:var(--gray);margin-top:2px}
+
+.contact-search{padding:8px 12px;border-bottom:1px solid #e9edef}
+.search-box{display:flex;align-items:center;background:#f0f2f5;border-radius:8px;padding:8px 12px;gap:8px}
+.search-box input{border:none;background:transparent;outline:none;font-size:13px;flex:1;color:#111}
+
+.contacts-list{flex:1;overflow-y:auto}
+.contact-item{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;border-bottom:1px solid #f0f2f5;transition:background .15s}
+.contact-item:hover{background:#f5f6f6}
+.contact-item.active{background:#f0f2f5}
+.contact-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+.contact-info{flex:1;min-width:0}
+.contact-name{font-size:14px;font-weight:600;color:#111}
+.contact-preview{font-size:13px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.contact-meta{text-align:right;flex-shrink:0}
+.contact-time{font-size:11px;color:var(--gray)}
+.unread-badge{background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;margin-top:4px;margin-left:auto}
+
+/* Resposta rápida */
+.quick-replies{padding:8px 12px;border-top:1px solid #e9edef}
+.quick-title{font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.quick-btn{display:block;width:100%;text-align:left;background:#f0f2f5;border:none;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;color:#111;margin-bottom:5px;transition:background .15s;font-family:'Inter',sans-serif}
+.quick-btn:hover{background:#e9edef}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── PAINEL ADMIN (esquerda) ── -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">🏥</div>
+        <div>
+          <div class="logo-text">{{ clinica.nome }}</div>
+          <div class="logo-sub">Painel de Atendimento IA</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.atendimentos_hoje }}</div>
+        <div class="stat-label">Atendimentos hoje</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.taxa_confirmacao }}</div>
+        <div class="stat-label">Confirmação</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.tempo_medio_resposta }}</div>
+        <div class="stat-label">Tempo resposta</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.satisfacao }}</div>
+        <div class="stat-label">Satisfação</div>
+      </div>
+    </div>
+
+    <div class="section-title">📅 Agenda de Hoje</div>
+    <div class="agenda-list">
+      {% for a in agendamentos %}
+      <div class="agenda-item {{ a.status }}">
+        <div class="agenda-nome">{{ a.paciente }}</div>
+        <div class="agenda-info">{{ a.data }} às {{ a.hora }} — {{ a.medico }}</div>
+        <span class="agenda-badge badge-{{ a.status }}">{{ a.status }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── CHAT WHATSAPP (centro) ── -->
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="avatar">🏥</div>
+      <div class="header-info">
+        <h3>{{ clinica.nome }}</h3>
+        <div class="header-status">
+          <div class="online-dot"></div>
+          <p>Bot ativo · Atendimento automático 24h</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-bg" id="chatBox">
+      <div class="date-divider"><span>HOJE</span></div>
+
+      <!-- Mensagem inicial do bot -->
+      <div class="message received">
+        <div class="bubble">
+          <div class="message-name">Assistente IA 🤖</div>
+          Olá! 👋 Bem-vindo à <b>{{ clinica.nome }}</b>!<br>
+          Como posso ajudar você hoje?<br><br>
+          • 📅 Agendar consulta<br>
+          • ✅ Confirmar agendamento<br>
+          • ❓ Tirar dúvidas
+          <span class="message-time">{{ "agora" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="input-wrapper">
+        <span class="emoji-btn">😊</span>
+        <input type="text" id="msgInput" placeholder="Digite uma mensagem..." onkeypress="if(event.key==='Enter')enviar()">
+      </div>
+      <button class="send-btn" onclick="enviar()">
+        <svg viewBox="0 0 24 24"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── LISTA DE CONTATOS (direita) ── -->
+  <div class="right-panel">
+    <div class="right-header">
+      <h3>💬 Conversas Ativas</h3>
+      <p>{{ stats.agendamentos_semana }} atendimentos esta semana</p>
+    </div>
+    <div class="contact-search">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" placeholder="Buscar paciente...">
+      </div>
+    </div>
+    <div class="contacts-list" id="contactsList">
+      <!-- gerado por JS -->
+    </div>
+    <div class="quick-replies">
+      <div class="quick-title">⚡ Respostas rápidas</div>
+      <button class="quick-btn" onclick="inserir('Quero agendar uma consulta')">📅 Agendar consulta</button>
+      <button class="quick-btn" onclick="inserir('Qual o horário disponível amanhã?')">⏰ Ver horários</button>
+      <button class="quick-btn" onclick="inserir('Quanto custa a consulta?')">💰 Valores</button>
+      <button class="quick-btn" onclick="inserir('Preciso cancelar minha consulta')">❌ Cancelar</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CORES = ['#25D366','#128C7E','#075E54','#34B7F1','#00BCD4','#9C27B0'];
+const CONTATOS = [
+  {nome:'Ana Paula',tel:'(11) 98765-0001',preview:'Quero agendar para amanhã',hora:'agora',unread:1,cor:CORES[0]},
+  {nome:'João Carlos',tel:'(11) 98765-0002',preview:'Confirmado! Obrigado 😊',hora:'há 2min',unread:0,cor:CORES[1]},
+  {nome:'Maria Fernanda',tel:'(11) 98765-0003',preview:'Qual médico atende criança?',hora:'há 5min',unread:2,cor:CORES[2]},
+  {nome:'Pedro Henrique',tel:'(11) 98765-0004',preview:'Ok, até amanhã então',hora:'há 12min',unread:0,cor:CORES[3]},
+  {nome:'Carla Souza',tel:'(11) 98765-0005',preview:'Preciso remarcar minha consulta',hora:'há 18min',unread:1,cor:CORES[4]},
+  {nome:'Lucas Oliveira',tel:'(11) 98765-0006',preview:'Que horas abre a clínica?',hora:'há 25min',unread:0,cor:CORES[5]},
+  {nome:'Beatriz Santos',tel:'(11) 98765-0007',preview:'Consulta confirmada ✅',hora:'há 1h',unread:0,cor:CORES[0]},
+  {nome:'Rafael Lima',tel:'(11) 98765-0008',preview:'Boa tarde! Tudo bem?',hora:'há 2h',unread:0,cor:CORES[1]},
+];
+
+// Renderiza contatos
+const lista = document.getElementById('contactsList');
+CONTATOS.forEach((c,i) => {
+  lista.innerHTML += `
+    <div class="contact-item ${i===0?'active':''}" onclick="selecionarContato(this, '${c.nome}')">
+      <div class="contact-avatar" style="background:${c.cor}">${c.nome.charAt(0)}</div>
+      <div class="contact-info">
+        <div class="contact-name">${c.nome}</div>
+        <div class="contact-preview">${c.preview}</div>
+      </div>
+      <div class="contact-meta">
+        <div class="contact-time">${c.hora}</div>
+        ${c.unread ? `<div class="unread-badge">${c.unread}</div>` : ''}
+      </div>
+    </div>`;
+});
+
+function selecionarContato(el, nome) {
+  document.querySelectorAll('.contact-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  el.querySelector('.unread-badge')?.remove();
+}
+
+function now() {
+  return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function addMsg(texto, tipo) {
+  const box = document.getElementById('chatBox');
+  const div = document.createElement('div');
+  div.className = `message ${tipo}`;
+  div.innerHTML = `<div class="bubble">
+    ${tipo==='received'?'<div class="message-name">Assistente IA 🤖</div>':''}
+    ${texto.replace(/\n/g,'<br>')}
+    <span class="message-time">${now()}</span>
+  </div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showTyping() {
+  const box = document.getElementById('chatBox');
+  const div = document.createElement('div');
+  div.className = 'message received';
+  div.id = 'typing-indicator';
+  div.innerHTML = `<div class="typing">
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+  </div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function removeTyping() {
+  document.getElementById('typing-indicator')?.remove();
+}
+
+async function enviar() {
+  const input = document.getElementById('msgInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  addMsg(msg, 'sent');
+  showTyping();
+  try {
+    const r = await fetch('/api/mensagem', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({telefone: 'demo-user', mensagem: msg})
+    });
+    const data = await r.json();
+    removeTyping();
+    addMsg(data.resposta, 'received');
+  } catch(e) {
+    removeTyping();
+    addMsg('Desculpe, ocorreu um erro. Tente novamente.', 'received');
+  }
+}
+
+function inserir(texto) {
+  document.getElementById('msgInput').value = texto;
+  document.getElementById('msgInput').focus();
+}
+</script>
+</body>
+</html>

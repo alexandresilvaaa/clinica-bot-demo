@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "C:\Users\Administrator\jarvis\projetos\clinica_bot\app.py", line 8, in <module>
+    from flask import Flask, render_template, request, jsonify
+ModuleNotFoundError: No module named 'flask'
