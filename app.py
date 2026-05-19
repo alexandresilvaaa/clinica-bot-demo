@@ -116,6 +116,6 @@ def get_agendamentos():
     return jsonify(agendamentos)
 
 if __name__ == "__main__":
-    os.makedirs("templates", exist_ok=True)
     port = int(os.environ.get("PORT", 5001))
+    print(f"Iniciando na porta {port}...")
     app.run(host="0.0.0.0", port=port, debug=False)
