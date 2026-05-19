@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import os, json, random
 from dotenv import load_dotenv
 
-load_dotenv(r"C:\Users\Administrator\jarvis\.env")
+load_dotenv()  # Render usa variáveis de ambiente direto
 
 app = Flask(__name__)
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
