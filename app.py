@@ -11,10 +11,13 @@ from datetime import datetime, timedelta
 import os, json, random
 from dotenv import load_dotenv
 
-load_dotenv()  # Render usa variáveis de ambiente direto
+load_dotenv()
 
 app = Flask(__name__)
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+# Inicializa Groq de forma segura (não crasha se KEY não estiver setada)
+_groq_key = os.getenv("GROQ_API_KEY", "")
+client = Groq(api_key=_groq_key) if _groq_key else None
 
 # ── Dados da clínica (simulado) ──────────────────────────────────────────────
 CLINICA = {
@@ -44,12 +47,15 @@ estatisticas = {
 
 # ── IA do Bot ─────────────────────────────────────────────────────────────────
 def responder_bot(telefone, mensagem):
+    if not client:
+        return "⚠️ IA temporariamente indisponível. Configure GROQ_API_KEY."
+
     if telefone not in conversas:
         conversas[telefone] = []
 
     conversas[telefone].append({"role": "user", "content": mensagem})
 
-    historico = conversas[telefone][-8:]  # últimas 8 mensagens
+    historico = conversas[telefone][-8:]
 
     r = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
